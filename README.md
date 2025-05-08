@@ -4,7 +4,7 @@ Through repeated interaction, the robots learn to identify package types, naviga
 The goal is to model intelligent behavior in a dynamic logistics setting without relying on predefined rules or supervision.
 
 ## Module Specs
-- Ray RLlib for Training orchestration and parallelization 
+- Ray RLlib for training, orchestration and parallelization 
 - PyGame for visualizations
 ## TODO
 - [ ] Design necessary classes
