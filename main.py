@@ -33,7 +33,7 @@ robots = []
 for id in range(1, 2):
     spawn = get_non_overlapping_spawn(robots, 528, 176, 48, 48, 32)
     robot = Robot(id=f'bot{id}', pos=spawn, groups=sprite_group, collision_group=game_map.collision_group)
-    robots.append(robot) # 1 = outline only
+    robots.append(robot)
     sprite_group.change_layer(robot, 2)
 
 # Main game loop
@@ -55,17 +55,16 @@ while running:
                     robot.deliver_item(entity)
                     robot.last_delivery_time = current_time
 
-        #respawn item
-        # Handle item A
+        # Respawn item A
         if a and not a.alive():
             if a_respawn_time is None:
-                a_respawn_time = current_time  # start the timer
+                a_respawn_time = current_time  # start cooldown timer
             elif current_time - a_respawn_time >= 3000:
                 a = Item(pos=(176, 176), groups=sprite_group, type='a')
                 sprite_group.change_layer(a, 1)
                 a_respawn_time = None  # reset
 
-        # Handle item B
+        # Respawn item B
         if b and not b.alive():
             if b_respawn_time is None:
                 b_respawn_time = current_time
@@ -74,10 +73,6 @@ while running:
                 sprite_group.change_layer(b, 1)
                 b_respawn_time = None
 
-        # if not b.alive():
-            # b = Item(pos=(848, 176), groups=sprite_group, type='b')
-
-    screen.fill((0, 0, 0))
     screen.fill((0, 0, 0))
     sprite_group.draw(screen)
     pygame.display.flip()

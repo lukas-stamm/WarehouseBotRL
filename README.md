@@ -7,9 +7,7 @@ The goal is to model intelligent behavior in a dynamic logistics setting without
 - Ray RLlib for training, orchestration and parallelization 
 - PyGame for visualizations
 ## TODO
-- [ ] Design necessary classes
-- [ ] Research/Design how RL works in RLlib
-- [ ] Implement classes
-- [ ] Design Map
-- [ ] Implement a simulation file for the orchestration workflow
-- [ ] Run Simulation
+- [x] Implement Game Logic and Visuals
+- [ ] Adapt to Reinforcement Learning
+- [ ] Train and Visualize Results
+ 
