@@ -11,5 +11,5 @@ The goal is to model intelligent behavior in a dynamic logistics setting without
 - [ ] Research/Design how RL works in RLlib
 - [ ] Implement classes
 - [ ] Design Map
-- [ ] Implement Simulation file for orchestration workflow
+- [ ] Implement a simulation file for the orchestration workflow
 - [ ] Run Simulation
