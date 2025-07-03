@@ -1,8 +1,11 @@
-import pygame
+class Dropzone:
+    def __init__(self, grid_top_left, grid_bottom_right, accepted_type):
+        self.x1, self.y1 = grid_top_left
+        self.x2, self.y2 = grid_bottom_right
+        self.accepted_type = accepted_type
 
-class Dropzone(pygame.sprite.Sprite):
-    def __init__(self, pos, size=(128, 64), groups=None, accepted_types=None):
-        super().__init__(groups)
-        self.image = pygame.Surface(size, pygame.SRCALPHA)
-        self.rect = self.image.get_rect(topleft=pos)
-        self.accepted_types = accepted_types
+    def contains(self, grid_x, grid_y):
+        """
+        Checks if (grid_x, grid_y) is inside the delivery zone.
+        """
+        return (self.x1 <= grid_x <= self.x2) and (self.y1 <= grid_y <= self.y2)

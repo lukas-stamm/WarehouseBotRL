@@ -1,26 +1,27 @@
 import pygame
-from Classes.item import Item
+from Classes.Helper.helper import get_frame
 
 class Robot(pygame.sprite.Sprite):
-    def __init__(self, id, pos, groups, collision_group):
+
+    ACTIONS = {
+        0: (-1, 0), # move left
+        1: (1, 0), # move right
+        2: (0, -1), # move up
+        3:  (0, 1), # move down
+    }
+
+    def __init__(self, bot_id, grid_pos, groups, grid_size, tile_size):
         super().__init__(groups)
-        self.id = id
-        self.collision_group = collision_group
-        self.speed = 2
-        self.inventory = []
-        self.last_delivery_time = 0
-        self.delivery_cooldown = 1500
 
-        # Load sprite sheet
+        # Store grid position and grid size for logic
+        self.grid_x, self.grid_y = grid_pos
+        self.grid_size = grid_size
+        self.tile_size = tile_size
+
+        # Load sprite sheet & animations
         self.sprite_sheet = pygame.image.load('Assets/images/Drone_2_Flying_32x32.png').convert_alpha()
-
-        # Fly loop frames (first row, indices 20–22)
-        self.fly_frames = [self.get_frame(i, row=0) for i in range(20, 23)]
-
-        # Grab claw frames (only bottom 12px, row 1)
-        self.grab_frames = [self.get_grab_frame(i) for i in range(12)]
-
-        # Animation state
+        self.fly_frames = [get_frame(self, i, width=32, height=44, rh=0) for i in range(20, 23)]
+        self.grab_frames = [get_frame(self, i, width=32, height=44, rh=228) for i in range(12)]
         self.frame_index = 0
         self.animation_speed = 0.15
         self.is_grabbing = False
@@ -29,23 +30,75 @@ class Robot(pygame.sprite.Sprite):
 
         # Initial sprite image and hitbox
         self.image = self.fly_frames[self.frame_index]
-        self.hitbox = pygame.Rect(pos[0], pos[1], 32, 32)
+        pixel_pos = (self.grid_x * self.tile_size, self.grid_y * self.tile_size)
+        self.hitbox = pygame.Rect(pixel_pos[0], pixel_pos[1], 32, 32)
         self.rect = self.image.get_rect(center=self.hitbox.topleft)
 
-    def get_frame(self, frame_index, row=0, width=32, height=44):
-        """Extract a 32x32 frame from the sprite sheet."""
-        frame = pygame.Surface((width, height), pygame.SRCALPHA)
-        frame.blit(self.sprite_sheet, (0, 0), (frame_index * width, row * height, width, height))
-        return frame
+        # Unique identifier for each bot on the map
+        self.bot_id = bot_id
+        # Movement speed of bot
+        self.speed = self.tile_size
+        # Represents inventory; None = empty, "A" = ItemA, "B" = ItemB
+        self.held_item_type = None
 
-    def get_grab_frame(self, frame_index, width=32, height=28):
-        """Extract a 32x12 grab claw frame from the second row."""
-        frame = pygame.Surface((width, height), pygame.SRCALPHA)
-        frame.blit(self.sprite_sheet, (0, 0), (frame_index * width, 228, width, height))  # Y=52
-        return frame
+    def propose_move(self, action):
+        """
+        Propose move without enforcing walls or collisions.
+        """
+        dx, dy = Robot.ACTIONS[action]
+        proposed_x = self.grid_x + dx
+        proposed_y = self.grid_y + dy
+        return proposed_x, proposed_y
+
+    def set_position(self, x, y):
+        """
+        Set grid position ONLY if the environment approves it.
+        """
+        self.grid_x = x
+        self.grid_y = y
+        # Update pixel position for rendering
+        self.hitbox.topleft = (self.grid_x * self.tile_size, self.grid_y * self.tile_size)
+
+    def pickup_item(self, item):
+        """
+        Sets the inventory flag for the picked-up item to True if empty.
+        """
+        if self.held_item_type is None:
+            self.held_item_type = item.item_type
+            print(f"({self.bot_id})Picked up item {item.item_type}.")
+
+            # Trigger grab animation
+            self.is_grabbing = True
+            self.grab_timer = pygame.time.get_ticks()
+            self.frame_index = 0
+        else:
+            print(f"({self.bot_id})Already holding item {self.held_item_type}.")
+
+    def deliver_item(self, dropzone):
+
+        print("delivering item works")
+
+        if self.held_item_type is None:
+            print(f"({self.bot_id})No item to deliver.")
+            return False
+
+        if self.held_item_type == dropzone.accepted_type:
+            print(f"({self.bot_id})Delivered item {self.held_item_type}.")
+            self.held_item_type = None
+
+            # Trigger grab animation
+            self.is_grabbing = True
+            self.grab_timer = pygame.time.get_ticks()
+            self.frame_index = 0
+            return True
+        else:
+            print(f"({self.bot_id})Wrong item for this dropzone.")
+            return False
 
     def animate(self):
-        """Handles flying loop and grab overlay."""
+        """
+        Handles flying loop and grab overlay.
+        """
         current_time = pygame.time.get_ticks()
 
         # Base fly animation
@@ -59,9 +112,9 @@ class Robot(pygame.sprite.Sprite):
             elapsed = current_time - self.grab_timer
             grab_frame_index = min(int((elapsed / self.grab_duration) * len(self.grab_frames)), len(self.grab_frames) - 1)
             grab_frame = self.grab_frames[grab_frame_index]
-            # Create full composite image
+            # Create a full composite image
             full_frame = pygame.Surface((32, 72), pygame.SRCALPHA)
-            # Only copy top 20px from fly frame
+            # Only copy top 20 px from fly frame
             full_frame.blit(base_frame, (0, 0), (0, 0, 32, 34))
             # Then copy full grab claw (32x12) at y = 20
             full_frame.blit(grab_frame, (0, 34))
@@ -76,63 +129,5 @@ class Robot(pygame.sprite.Sprite):
         # Not grabbing → fly frame only
         self.image = base_frame
 
-    def input(self):
-        keys = pygame.key.get_pressed()
-        dx, dy = 0, 0
-        if keys[pygame.K_LEFT]:
-            dx = -self.speed
-        if keys[pygame.K_RIGHT]:
-            dx = self.speed
-        if keys[pygame.K_UP]:
-            dy = -self.speed
-        if keys[pygame.K_DOWN]:
-            dy = self.speed
-        return dx, dy
-
-    def update_pos(self):
-        dx, dy = self.input()
-
-        # Move hitbox
-        self.hitbox.x += dx
-        if pygame.sprite.spritecollide(self, self.collision_group, False,
-                                       collided=lambda x, y: x.hitbox.colliderect(y.rect)):
-            self.hitbox.x -= dx
-
-        self.hitbox.y += dy
-        if pygame.sprite.spritecollide(self, self.collision_group, False,
-                                       collided=lambda x, y: x.hitbox.colliderect(y.rect)):
-            self.hitbox.y -= dy
-
-        # Align sprite rect to hitbox
-        self.rect.center = self.hitbox.center
-
-    def pickup_item(self, item):
-        if not self.inventory:
-            self.inventory.append(item)
-            print(f"({self.id})Item picked up.")
-            item.kill()
-
-            # Trigger grab animation
-            self.is_grabbing = True
-            self.grab_timer = pygame.time.get_ticks()
-            self.frame_index = 0
-
-    def deliver_item(self, item):
-        if not self.inventory:
-            print(f"({self.id})No item to deliver. Inventory empty.")
-            return
-
-        if item.accepted_types == self.inventory[0].type:
-            self.inventory.pop(0)
-            # Trigger grab animation
-            self.is_grabbing = True
-            self.grab_timer = pygame.time.get_ticks()
-            self.frame_index = 0
-
-            print(f"({self.id})Item delivered.")
-        else:
-            print(f"({self.id})Wrong item for this zone.")
-
     def update(self):
-        self.update_pos()
         self.animate()

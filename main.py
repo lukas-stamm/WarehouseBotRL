@@ -1,12 +1,11 @@
 import pygame, sys
 from pygame.locals import QUIT
 
-from Classes.dropzone import Dropzone
 from Classes.map import Map
 from Classes.robot import Robot
 from Classes.item import Item
 from Classes.dropzone import Dropzone
-from helper import get_non_overlapping_spawn
+from Classes.Helper.helper import get_non_overlapping_spawn
 
 pygame.init()
 screen = pygame.display.set_mode((1024, 1024))
@@ -15,7 +14,7 @@ clock = pygame.time.Clock()
 # Create sprite group and load map
 sprite_group = pygame.sprite.LayeredUpdates()
 
-game_map = Map('Assets/Map.tmx', sprite_group)
+game_map = Map('Assets/Maps/Map.tmx', sprite_group)
 
 dropzone_a = Dropzone(pos=(96,928), groups=sprite_group, accepted_types='a')
 dropzone_b = Dropzone(pos=(800,928), groups=sprite_group, accepted_types='b')
