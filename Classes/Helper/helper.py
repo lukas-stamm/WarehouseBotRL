@@ -32,3 +32,9 @@ def reset_event_flags(self):
     self.just_tried_wrong_pickup = False
     self.just_delivered = False
     self.just_tried_wrong_drop = False
+
+
+
+
+
+

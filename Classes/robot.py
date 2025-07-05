@@ -71,8 +71,11 @@ class Robot(pygame.sprite.Sprite):
             self.is_grabbing = True
             self.grab_timer = pygame.time.get_ticks()
             self.frame_index = 0
+
+            return False
         else:
             print(f"({self.bot_id})Already holding item {self.held_item_type}.")
+            return True
 
     def deliver_item(self, dropzone):
 

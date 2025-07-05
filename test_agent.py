@@ -10,14 +10,14 @@ pygame.init()
 pygame.display.set_mode((1, 1))  # to satisfy pytmx loading
 
 # === Setup map just like in training ===
-TMX_PATH = "Assets/Maps/BaselineMap.tmx"
+TMX_PATH = "Assets/Maps/ObstacleMap.tmx"
 
 pickup_locations = {
-    "A": (3, 4),
+    "A": (2, 3),
 }
 
 delivery_zones = {
-    "A": d.Dropzone((7, 14), (10, 15), "A"),
+    "A": d.Dropzone((3, 13), (6, 14), "A"),
 }
 
 all_sprites_group = pygame.sprite.Group()
@@ -31,7 +31,7 @@ game_map = m.Map(
     delivery_zones=delivery_zones
 )
 
-robot_start_pos = (14, 4)
+robot_start_pos = (13, 3)
 pickup_item_types = ["A"]
 tile_size = 32
 max_steps = 200
@@ -46,7 +46,7 @@ env = whe.WarehouseEnv(
 )
 
 # === Load the trained model ===
-model = PPO.load("Models/warehouse_policy_baseline")
+model = PPO.load("Models/warehouse_policy_obstacle2")
 
 # === Run one test episode ===
 obs, _ = env.reset()
@@ -64,7 +64,7 @@ while not done:
     env.render()
 
     # OPTIONAL: slow it down for human eyes
-    pygame.time.wait(200)  # 200ms delay between steps
+    pygame.time.wait(100)  # 200ms delay between steps
 
     step_count += 1
 

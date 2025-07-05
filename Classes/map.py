@@ -52,7 +52,9 @@ class Map:
 
         # Define which TMX layers count as walls/obstacles
         collision_layers = {
-            "Walls"
+            "Walls",
+            "Obstacles1",
+            "Obstacles2"
         }
 
         for layer in self.tmx_data.visible_layers:

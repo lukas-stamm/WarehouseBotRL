@@ -1,5 +1,5 @@
 import pygame
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.callbacks import BaseCallback
 from Classes import warehouse_env as whe
 from Classes import map as m
@@ -24,14 +24,14 @@ class SlowDownCallback(BaseCallback):
         return True
 
 # === Setup ===
-TMX_PATH = "Assets/Maps/BaselineMap.tmx"
+TMX_PATH = "Assets/Maps/ObstacleMap.tmx"
 
 pickup_locations = {
-    "A": (3, 4),
+    "A": (2, 3),
 }
 
 delivery_zones = {
-    "A": d.Dropzone((7, 14), (10, 15), "A"),
+    "A": d.Dropzone((3, 13), (6, 14), "A"),
 }
 
 all_sprites_group = pygame.sprite.Group()
@@ -45,7 +45,7 @@ game_map = m.Map(
     delivery_zones=delivery_zones
 )
 
-robot_start_pos = (14, 4)
+robot_start_pos = (13, 3)
 pickup_item_types = ["A"]
 tile_size = 32
 max_steps = 200
@@ -59,7 +59,7 @@ env = whe.WarehouseEnv(
     max_steps=max_steps
 )
 
-# === Baseline TensorBoard log directory ===
+# === Obstacle TensorBoard log directory ===
 log_dir = f"./tensorboard_logs/run_{int(time.time())}/"
 
 # === PPO Agent with TensorBoard logging ===
@@ -67,20 +67,21 @@ model = PPO(
     policy="MlpPolicy",
     env=env,
     verbose=1,
-    tensorboard_log=log_dir
+    tensorboard_log=log_dir,
+    ent_coef=0.05
 )
 
 # === Add the SlowDownCallback ⭐ ADDED THIS ===
-slow_callback = SlowDownCallback(delay_s=0.02)  # adjust delay here as you want
+# slow_callback = SlowDownCallback(delay_s=0.1)  # adjust delay here as you want
 
 # === Train with slowdown ===
-TOTAL_TIMESTEPS = 100_000
-model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=slow_callback)
+TOTAL_TIMESTEPS = 500_000
+model.learn(total_timesteps=TOTAL_TIMESTEPS)
 
 # === Save Model ===
-model.save("Models/warehouse_policy_baseline")
+model.save("Models/warehouse_policy_obstacle2")
 
-print("✅ Baseline training complete. Model saved as 'warehouse_policy_baseline.zip'.")
+print("✅ Obstacle training complete. Model saved as 'warehouse_policy_obstacle.zip'.")
 
 # === Clean up ===
 env.close()
