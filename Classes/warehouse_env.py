@@ -34,6 +34,7 @@ class WarehouseEnv(gym.Env):
         self.deliveries_done = 0
         self.max_deliveries = 3
 
+        # Reward trackers and values
         self.has_entered_delivery_area_this_carry = False
         self.has_exited_delivery_area_this_delivery = False
         self.entry_reward_remaining = 5
@@ -52,7 +53,6 @@ class WarehouseEnv(gym.Env):
         self.action_space = spaces.Discrete(4)  # LEFT, RIGHT, UP, DOWN
 
         # -- Define Observation Space --
-        # E.g.:
         # [robot_x, robot_y, held_item_onehot(2), pickups (2*len) delivery (2*len), +4 for obstacle sensing]
         obs_dim = 2 + 2 + 4 * len(self.pickup_item_types) + 4
         self.observation_space = spaces.Box(
@@ -123,7 +123,7 @@ class WarehouseEnv(gym.Env):
         # Track old position
         old_x, old_y = self.robot.grid_x, self.robot.grid_y
 
-        # -- Propose move --
+        # Propose move
         new_x, new_y = self.robot.propose_move(action)
         if self.map.is_blocked(new_x, new_y):
             reward -= 5.0  # collision penalty
@@ -131,11 +131,11 @@ class WarehouseEnv(gym.Env):
             self.robot.set_position(new_x, new_y)
 
 
-        # === Shaping Reward Targets ===
+        # Shaping Reward Targets
         entrance_x = 10
         entrance_y = 12
 
-        # 1️⃣ APPROACH PICKUP (not holding, outside delivery area)
+        # APPROACH PICKUP (not holding, outside delivery area)
         # Encourage moving toward the pickup location when the agent has nothing.
         if not self.robot.held_item_type and self.robot.grid_y < 10:
             for item in self.item_group:
@@ -144,7 +144,7 @@ class WarehouseEnv(gym.Env):
                 if new_dist < old_dist:
                     reward += 1
 
-        # 2️⃣ APPROACH DELIVERY ENTRANCE (holding, outside delivery area)
+        # APPROACH DELIVERY ENTRANCE (holding, outside delivery area)
         # Encourage moving toward the delivery area's entrance when holding an item.
         if self.robot.held_item_type and self.robot.grid_y < 10:
             old_dist = self._grid_distance(old_x, old_y, entrance_x, entrance_y)
@@ -152,7 +152,7 @@ class WarehouseEnv(gym.Env):
             if new_dist < old_dist:
                 reward += 1
 
-        # 3️⃣ APPROACH DROPOFF LOCATION (holding, inside delivery area)
+        # APPROACH DROPOFF LOCATION (holding, inside delivery area)
         # Encourage moving toward the center of the dropzone when inside delivery area with an item.
         if self.robot.held_item_type and self.robot.grid_y >= 10:
             dropzone = self.map.get_delivery_zone(self.robot.held_item_type)
@@ -164,7 +164,7 @@ class WarehouseEnv(gym.Env):
                 if new_dist < old_dist:
                     reward += 1
 
-        # 4️⃣ APPROACH EXIT (not holding, inside delivery area)
+        # APPROACH EXIT (not holding, inside delivery area)
         # Encourage moving back out of the delivery area (toward entrance) after delivering.
         if not self.robot.held_item_type and self.robot.grid_y >= 10:
             old_dist = self._grid_distance(old_x, old_y, entrance_x, entrance_y)
@@ -172,7 +172,7 @@ class WarehouseEnv(gym.Env):
             if new_dist < old_dist:
                 reward += 1
 
-        # -- Check pickup --
+        # Check pickup
         for item in list(self.item_group):
             if (item.grid_x, item.grid_y) == (self.robot.grid_x, self.robot.grid_y):
                 already_picked_up = self.robot.pickup_item(item)
@@ -196,12 +196,12 @@ class WarehouseEnv(gym.Env):
         if self.robot.held_item_type and self.robot.grid_y >= 10:
             if self.entry_reward_remaining > 0.0:
                 reward += self.entry_reward_remaining
-                print(f"✅ Entry bonus: +{self.entry_reward_remaining}")
+                print(f"Entry bonus: +{self.entry_reward_remaining}")
                 self.entry_reward_remaining = max(
                     0.0, self.entry_reward_remaining - self.entry_reward_decrement
                 )
 
-        # -- Check delivery --
+        # Check delivery
         if self.robot.held_item_type:
             dropzone = self.map.get_delivery_zone(self.robot.held_item_type)
             if dropzone and dropzone.contains(self.robot.grid_x, self.robot.grid_y):
@@ -213,12 +213,13 @@ class WarehouseEnv(gym.Env):
                     self.has_entered_delivery_area_this_carry = False
                     print(f"Delivery count: {self.deliveries_done}")
 
+        # One time reward for reaching checkpoint after delivery
         if not self.robot.held_item_type and self.deliveries_done > 0:
             if self.robot.grid_y < 10:
-                # ✅ Reward exiting only once per delivery
+                # Reward exiting only once per delivery
                 if not self.has_exited_delivery_area_this_delivery and self.deliveries_done > 0:
                     reward += 10.0
-                    print("✅ One-time exit 3 bonus granted")
+                    print("One-time exit 3 bonus granted")
                     self.has_exited_delivery_area_this_delivery = True
             else:
                 # Penalty for hanging around inside delivery area after delivery
@@ -227,20 +228,21 @@ class WarehouseEnv(gym.Env):
                 if self.inside_without_item_penalty < self.inside_without_item_penalty:
                     self.inside_without_item_penalty += 1
 
+        # One time reward for reaching checkpoint after delivery
         if not self.robot.held_item_type and self.deliveries_done > 0:
             if self.robot.grid_x > 6:
-                # ✅ Reward exiting only once per delivery
+                # Reward exiting only once per delivery
                 if not self.has_exited_barrier_1 and self.deliveries_done > 0:
                     reward += 5
-                    print("✅ One-time exit 1 bonus granted")
+                    print("One-time exit 1 bonus granted")
                     self.has_exited_barrier_1 = True
 
+        # Reward exiting only once per delivery
         if not self.robot.held_item_type and self.deliveries_done > 0:
             if self.robot.grid_x > 9:
-                # ✅ Reward exiting only once per delivery
                 if not self.has_exited_barrier_2 and self.deliveries_done > 0:
                     reward += 5
-                    print("✅ One-time exit 2 bonus granted")
+                    print("One-time exit 2 bonus granted")
                     self.has_exited_barrier_2 = True
 
         # Handle respawn timers
@@ -258,14 +260,14 @@ class WarehouseEnv(gym.Env):
                             item_type=item_type
                         )
 
-        # -- Check episode termination --
+        # Check episode termination
         if self.steps >= self.max_steps:
             terminated = True
 
         # End episode after 3 deliveries
         if self.deliveries_done >= self.max_deliveries:
             terminated = True
-            print("✅ 3 deliveries achieved. Ending episode.")
+            print("3 deliveries achieved. Ending episode.")
 
         observation = self.get_observation()
         self.render()

@@ -5,11 +5,11 @@ from Classes import map as m
 from Classes import dropzone as d
 import time
 
-# === Pygame init ===
+# Pygame init
 pygame.init()
 pygame.display.set_mode((1, 1))  # to satisfy pytmx loading
 
-# === Setup map just like in training ===
+# Setup map just like in training
 TMX_PATH = "Assets/Maps/ObstacleMap.tmx"
 
 pickup_locations = {
@@ -36,7 +36,7 @@ pickup_item_types = ["A"]
 tile_size = 32
 max_steps = 200
 
-# === Create environment ===
+# Create environment
 env = whe.WarehouseEnv(
     map_obj=game_map,
     robot_start_pos=robot_start_pos,
@@ -45,10 +45,10 @@ env = whe.WarehouseEnv(
     max_steps=max_steps
 )
 
-# === Load the trained model ===
-model = PPO.load("Models/warehouse_policy_obstacle2")
+# Load the trained model
+model = PPO.load("Models/warehouse_policy_obstacle")
 
-# === Run one test episode ===
+# Run one test episode
 obs, _ = env.reset()
 done = False
 step_count = 0
@@ -63,13 +63,13 @@ while not done:
     # Render to Pygame window
     env.render()
 
-    # OPTIONAL: slow it down for human eyes
+    # OPTIONAL: slow down for human eyes
     pygame.time.wait(100)  # 200ms delay between steps
 
     step_count += 1
 
-print(f"✅ Test run complete in {step_count} steps.")
+print(f"Test run complete in {step_count} steps.")
 
-# === Clean up ===
+# Clean up
 env.close()
 pygame.quit()

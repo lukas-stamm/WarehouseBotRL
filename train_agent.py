@@ -6,11 +6,10 @@ from Classes import map as m
 from Classes import dropzone as d
 import time
 
-# === Pygame init ===
+# Pygame init
 pygame.init()
 pygame.display.set_mode((1, 1))
 
-# === Define SlowDownCallback ⭐ ADDED THIS ===
 class SlowDownCallback(BaseCallback):
     """
     Simple SB3 callback to slow down training steps with a sleep delay.
@@ -23,7 +22,7 @@ class SlowDownCallback(BaseCallback):
         time.sleep(self.delay_s)
         return True
 
-# === Setup ===
+# Setup
 TMX_PATH = "Assets/Maps/ObstacleMap.tmx"
 
 pickup_locations = {
@@ -50,7 +49,7 @@ pickup_item_types = ["A"]
 tile_size = 32
 max_steps = 200
 
-# === Create Environment ===
+# Create Environment
 env = whe.WarehouseEnv(
     map_obj=game_map,
     robot_start_pos=robot_start_pos,
@@ -59,10 +58,10 @@ env = whe.WarehouseEnv(
     max_steps=max_steps
 )
 
-# === Obstacle TensorBoard log directory ===
+# Obstacle TensorBoard log directory
 log_dir = f"./tensorboard_logs/run_{int(time.time())}/"
 
-# === PPO Agent with TensorBoard logging ===
+# PPO Agent with TensorBoard logging
 model = PPO(
     policy="MlpPolicy",
     env=env,
@@ -71,18 +70,17 @@ model = PPO(
     ent_coef=0.05
 )
 
-# === Add the SlowDownCallback ⭐ ADDED THIS ===
-# slow_callback = SlowDownCallback(delay_s=0.1)  # adjust delay here as you want
+# slow_callback = SlowDownCallback(delay_s=0.1)
 
-# === Train with slowdown ===
+# Train with slowdown
 TOTAL_TIMESTEPS = 500_000
 model.learn(total_timesteps=TOTAL_TIMESTEPS)
 
-# === Save Model ===
+# Save Model
 model.save("Models/warehouse_policy_obstacle2")
 
-print("✅ Obstacle training complete. Model saved as 'warehouse_policy_obstacle.zip'.")
+print("Obstacle training complete. Model saved as 'warehouse_policy_obstacle.zip'.")
 
-# === Clean up ===
+# Clean up
 env.close()
 pygame.quit()
