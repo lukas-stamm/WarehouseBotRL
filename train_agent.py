@@ -6,11 +6,10 @@ from Classes import map as m
 from Classes import dropzone as d
 import time
 
-# === Pygame init ===
+# Pygame init
 pygame.init()
 pygame.display.set_mode((1, 1))
 
-# === Define SlowDownCallback ⭐ ADDED THIS ===
 class SlowDownCallback(BaseCallback):
     """
     Simple SB3 callback to slow down training steps with a sleep delay.
@@ -23,7 +22,7 @@ class SlowDownCallback(BaseCallback):
         time.sleep(self.delay_s)
         return True
 
-# === Setup ===
+# Setup
 TMX_PATH = "Assets/Maps/BaselineMap.tmx"
 
 pickup_locations = {
@@ -31,7 +30,7 @@ pickup_locations = {
 }
 
 delivery_zones = {
-    "A": d.Dropzone((7, 14), (10, 15), "A"),
+    "A": d.Dropzone((6, 13), (9, 14), "A"),
 }
 
 all_sprites_group = pygame.sprite.Group()
@@ -50,7 +49,7 @@ pickup_item_types = ["A"]
 tile_size = 32
 max_steps = 200
 
-# === Create Environment ===
+# Create Environment
 env = whe.WarehouseEnv(
     map_obj=game_map,
     robot_start_pos=robot_start_pos,
@@ -59,10 +58,10 @@ env = whe.WarehouseEnv(
     max_steps=max_steps
 )
 
-# === Baseline TensorBoard log directory ===
+# Baseline TensorBoard log directory
 log_dir = f"./tensorboard_logs/run_{int(time.time())}/"
 
-# === PPO Agent with TensorBoard logging ===
+# PPO Agent with TensorBoard logging
 model = PPO(
     policy="MlpPolicy",
     env=env,
@@ -70,18 +69,17 @@ model = PPO(
     tensorboard_log=log_dir
 )
 
-# === Add the SlowDownCallback ⭐ ADDED THIS ===
-slow_callback = SlowDownCallback(delay_s=0.02)  # adjust delay here as you want
+# slow_callback = SlowDownCallback(delay_s=0.02)
 
-# === Train with slowdown ===
+# Train with slowdown
 TOTAL_TIMESTEPS = 100_000
-model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=slow_callback)
+model.learn(total_timesteps=TOTAL_TIMESTEPS)
 
-# === Save Model ===
+# Save Model
 model.save("Models/warehouse_policy_baseline")
 
-print("✅ Baseline training complete. Model saved as 'warehouse_policy_baseline.zip'.")
+print("Baseline training complete. Model saved as 'warehouse_policy_baseline.zip'.")
 
-# === Clean up ===
+# Clean up
 env.close()
 pygame.quit()

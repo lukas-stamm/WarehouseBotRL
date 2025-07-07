@@ -153,7 +153,7 @@ class WarehouseEnv(gym.Env):
         # End episode after 3 deliveries
         if self.deliveries_done >= self.max_deliveries:
             terminated = True
-            print("✅ 3 deliveries achieved. Ending episode.")
+            print("3 deliveries achieved. Ending episode.")
 
         observation = self.get_observation()
         self.render()
