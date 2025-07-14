@@ -329,10 +329,12 @@ class WarehouseEnv(gym.Env):
         return np.array(obs, dtype=np.float32)
 
     def render(self, mode="human"):
-        """
-        Optional Pygame rendering.
-        Call this after step() to update display.
-        """
+        # Handle Pygame events so the window doesn't freeze
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.close()
+                exit()  # Or raise SystemExit
+
         if not self.screen:
             self.screen = pygame.display.set_mode(
                 (self.map.width * self.tile_size, self.map.height * self.tile_size)
@@ -341,20 +343,21 @@ class WarehouseEnv(gym.Env):
 
         self.screen.fill((0, 0, 0))  # Clear
 
-        # Draw the map
+        # Draw the map and sprites
         self.map.render_layer_group.draw(self.screen)
         self.item_group.draw(self.screen)
         self.screen.blit(self.robot.image, self.robot.hitbox)
 
-        # Optional grid
+        # Optional grid overlay
         self.map.draw_grid_debug(self.screen)
 
         pygame.display.flip()
 
     def close(self):
         if self.screen:
-            pygame.quit()
+            pygame.display.quit()
             self.screen = None
+        pygame.quit()
 
     def _grid_distance(self, x1, y1, x2, y2):
         return abs(x1 - x2) + abs(y1 - y2)
