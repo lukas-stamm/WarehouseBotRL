@@ -223,7 +223,7 @@ class WarehouseEnv(gym.Env):
                     self.has_exited_delivery_area_this_delivery = True
             else:
                 # Penalty for hanging around inside delivery area after delivery
-                print(f"Inside without item penalty: -{self.inside_without_item_penalty}{self.robot.grid_x}{self.robot.grid_y}")
+                # print(f"Inside without item penalty: -{self.inside_without_item_penalty}{self.robot.grid_x}{self.robot.grid_y}")
                 reward -= self.inside_without_item_penalty
                 if self.inside_without_item_penalty < self.inside_without_item_penalty:
                     self.inside_without_item_penalty += 1
